@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Countdown UI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body {
+        background-color: #000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
+
+      #countdown {
+        display: flex;
+        gap: 10px;
+      }
+
+      .digit {
+        display: grid;
+        grid-template-columns: repeat(5, 10px);
+        grid-template-rows: repeat(7, 10px);
+        gap: 2px;
+      }
+
+      .pixel {
+        width: 10px;
+        height: 10px;
+        background-color: #222;
+      }
+
+      .pixel.on {
+        background-color: white;
+      }
+    </style>
+  </head>
+
+  <body
+    class="bg-white min-h-screen flex items-center justify-center p-4 mx-auto"
+  >
+    <div class="bg-[#A5D6A7] rounded-3xl shadow-2xl w-full max-w-2xl p-6 mx-auto">
+      <div class="flex justify-between items-center mb-3">
+        <div class="text-[#006400] text-sm font-medium">Event Countdown</div>
+        <div
+          class="bg-[#006400] text-white px-3 py-1 rounded-full text-sm shadow-md"
+        >
+          17 Agustus 2025
+        </div>
+      </div>
+
+      <div id="day-count" class="text-3xl font-semibold text-black mb-4">
+        In -- days
+      </div>
+
+      <div
+        id="countdown"
+        class="bg-black rounded-2xl px-3 py-4 flex justify-center gap-1 overflow-hidden"
+      ></div>
+    </div>
+
+    <script>
+      const font = {
+        0: ["01110", "10001", "10011", "10101", "11001", "10001", "01110"],
+        1: ["00100", "01100", "00100", "00100", "00100", "00100", "01110"],
+        2: ["01110", "10001", "00001", "00110", "01000", "10000", "11111"],
+        3: ["01110", "10001", "00001", "00110", "00001", "10001", "01110"],
+        4: ["00010", "00110", "01010", "10010", "11111", "00010", "00010"],
+        5: ["11111", "10000", "11110", "00001", "00001", "10001", "01110"],
+        6: ["01110", "10001", "10000", "11110", "10001", "10001", "01110"],
+        7: ["11111", "00001", "00010", "00100", "01000", "01000", "01000"],
+        8: ["01110", "10001", "10001", "01110", "10001", "10001", "01110"],
+        9: ["01110", "10001", "10001", "01111", "00001", "10001", "01110"],
+        ":": ["00000", "00100", "00100", "00000", "00100", "00100", "00000"],
+      };
+
+      function createDigitElement(char) {
+        const digit = document.createElement("div");
+        digit.classList.add("digit");
+        const pattern = font[char];
+        if (!pattern) return digit;
+        pattern.forEach((row) => {
+          for (let i = 0; i < row.length; i++) {
+            const pixel = document.createElement("div");
+            pixel.classList.add("pixel");
+            if (row[i] === "1") pixel.classList.add("on");
+            digit.appendChild(pixel);
+          }
+        });
+        return digit;
+      }
+
+      function renderTime(container, timeString) {
+        container.innerHTML = "";
+        for (const char of timeString) {
+          container.appendChild(createDigitElement(char));
+        }
+      }
+
+      function getCountdownTime(targetDate) {
+        const now = new Date();
+        let diff = Math.floor((targetDate - now) / 1000); // detik
+        if (diff < 0) diff = 0;
+
+        const midnightNow = new Date(now);
+        const midnightTarget = new Date(targetDate);
+        midnightNow.setHours(0, 0, 0, 0);
+        midnightTarget.setHours(0, 0, 0, 0);
+
+        const calendarDays = Math.ceil(
+          (midnightTarget - midnightNow) / (1000 * 60 * 60 * 24)
+        );
+        const isSameDay = now.toDateString() === targetDate.toDateString();
+
+        const days = Math.floor(diff / 86400);
+        const hours = Math.floor((diff % 86400) / 3600);
+        const minutes = Math.floor((diff % 3600) / 60);
+        const seconds = diff % 60;
+
+        return {
+          diff,
+          displayDays: calendarDays,
+          isSameDay,
+          hours: String(hours).padStart(2, "0"),
+          minutes: String(minutes).padStart(2, "0"),
+          seconds: String(seconds).padStart(2, "0"),
+        };
+      }
+
+      const countdownEl = document.getElementById("countdown");
+      const dayCountEl = document.getElementById("day-count");
+
+      // ✅ Ganti ke waktu target kamu di sini
+      const targetDate = new Date("2025-08-17T10:00:00");
+
+      function updateCountdown() {
+        const { diff, displayDays, isSameDay, hours, minutes, seconds } =
+          getCountdownTime(targetDate);
+
+        if (diff === 0) {
+          dayCountEl.textContent = "It's happening now!";
+          renderTime(countdownEl, "00:00:00");
+        } else if (displayDays > 0) {
+          dayCountEl.textContent = `In ${displayDays} day${
+            displayDays === 1 ? "" : "s"
+          }`;
+          renderTime(
+            countdownEl,
+            `${String(displayDays).padStart(2, "0")}:${hours}:${minutes}`
+          );
+        } else if (isSameDay) {
+          dayCountEl.textContent = "Today";
+          renderTime(countdownEl, `${hours}:${minutes}:${seconds}`);
+        } else {
+          dayCountEl.textContent = "Countdown";
+          renderTime(countdownEl, `${hours}:${minutes}:${seconds}`);
+        }
+      }
+
+      updateCountdown();
+      setInterval(updateCountdown, 1000);
+    </script>
+  </body>
+</html>
